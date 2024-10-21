@@ -3,8 +3,9 @@
 #include "parser.h"
 #include "lexer.h"
 #include "ast.h"
-#include "symtab.h"
-#include "scope_check.h"
+//edited to make debugging parser easier, change back for part 2
+//#include "symtab.h"
+//#include "scope_check.h"
 #include "utilities.h"
 #include "unparser.h"
 
@@ -38,10 +39,12 @@ int main(int argc, char *argv[])
     // comment out the next two commands to disable declaration checking
 
     // building symbol table
-    symtab_initialize();
+    //change for part 2
+    //symtab_initialize();
 
     // check for duplicate declarations
-    scope_check_program(progast);
+    //change for part 2
+    //scope_check_program(progast);
 
     return EXIT_SUCCESS;
 }
