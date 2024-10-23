@@ -124,25 +124,26 @@ block: beginsym constDecls varDecls procDecls stmts endsym;
 
 constDecls: constDecl;
 constDecl: constsym constDefList;
-constDefList: constDef | constDefs commasym constDef;
-constDef: ident eqsym number;
+constDef: identsym eqsym numbersym;
+constDefList: constDef | constDef commasym constDef;
+
 
 varDecls: varDecl
 varDecl: varsym identList;
-identList: ident | idents commasym ident
+identList: identsym | identsym commasym identsym
 
 procDecls: procDecl;
-procDecl: procsym ident block;
+procDecl: procsym identsym block;
 
-stms: empty | stmtList;
+stmts: empty | stmtList;
 empty: /*empty*/;
-stmtList: stms | stmtList semisym stmt
+stmtList: stmts | stmtList semisym stmt
 stmt: assignStmt | callStmt | ifStmt | whileStmt | readStmt | printStmt | blockStmt;
-assignStmt: ident becomessym expr;
-callStmt: callsym ident;
-ifStmt: ifsym condition thensym stmts elsesym stmts endsym | ifsym condition thensm stmts endsym;
+assignStmt: identsym becomessym expr;
+callStmt: callsym identsym;
+ifStmt: ifsym condition thensym stmts elsesym stmts endsym | ifsym condition thensym stmts endsym;
 whileStmt: whilesym condition dosym stmts endsym;
-readStmt: readsym ident;
+readStmt: readsym identsym;
 printStmt: printsym expr;
 blockStmt: block;
 
@@ -151,10 +152,12 @@ dbCondition: divisiblesym expr bysym expr;
 relOpCondition: expr relOp expr;
 relOp: eqeqsym | neqsym | ltsym | leqsym | gtsym | geqsym;
 
-expr: | expr plus term | expr minus term;
-term factor | term mult factor | term div factor;
-factor ident | number | sign factor | lparensym expr rparensym;
-sign: minus | plus;
+factor: identsym | numbersym | sign factor | lparensym expr rparensym;
+term: factor | term multsym factor | term divsym factor;
+expr: | expr plussym term | expr minussym term;
+
+
+sign: minussym | plussym;
 
 
 %%

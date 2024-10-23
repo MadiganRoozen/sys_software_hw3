@@ -38,7 +38,7 @@ SUBMISSIONZIPFILE = submission.zip
 # and there is no parser_types.c file provided,
 # but you could add machine_types.o and parser_types.o if need be.
 # scope.o scope_check.o symtab.o \ 
-COMPILER_OBJECTS =
+COMPILER_OBJECTS =\
 		$(SPL).tab.o $(SPL)_lexer.o \
 		$(COMPILER)_main.o parser.o unparser.o id_use.o \
 		id_attrs.o ast.o file_location.o utilities.o
