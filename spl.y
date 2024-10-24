@@ -130,13 +130,13 @@ constDefList: constDef | constDef commasym constDef;
 
 varDecls: varDecl
 varDecl: varsym identList;
-identList: identsym | identsym commasym identsym
+identList: identsym | identList commasym identsym
 
 procDecls: procDecl;
 procDecl: procsym identsym block;
 
 stmts: empty | stmtList;
-empty: /*empty*/;
+empty: {$$ = Null} %empty;
 stmtList: stmts | stmtList semisym stmt
 stmt: assignStmt | callStmt | ifStmt | whileStmt | readStmt | printStmt | blockStmt;
 assignStmt: identsym becomessym expr;
@@ -154,7 +154,7 @@ relOp: eqeqsym | neqsym | ltsym | leqsym | gtsym | geqsym;
 
 factor: identsym | numbersym | sign factor | lparensym expr rparensym;
 term: factor | term multsym factor | term divsym factor;
-expr: | expr plussym term | expr minussym term;
+expr: expr plussym term | expr minussym term;
 
 
 sign: minussym | plussym;
