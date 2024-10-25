@@ -123,7 +123,7 @@ program: block "." { setProgAST($1); };
 block: "begin" constDecls varDecls procDecls stmts "end" { $$ = ast_block($1, $2, $3, $4, $5); };
 
 constDecls: empty { $$ = ast_const_decls_empty($1); }
-            | constDecls constDecl { $$ = ast_const_decls($1, $2); };
+            | constDecls constDecl ";" { $$ = ast_const_decls($1, $2); };
 constDecl: "const" constDefList { $$ = ast_const_decl($2); };
 constDef: identsym "=" numbersym { $$ = ast_const_def($1, $3); };
 constDefList: constDef { $$ = ast_const_def_list_singleton($1); }
@@ -131,18 +131,19 @@ constDefList: constDef { $$ = ast_const_def_list_singleton($1); }
 
 
 varDecls: empty { $$ = ast_var_decls_empty($1); }
-          | varDecls varDecl { $$ = ast_var_decls($1, $2); };
+          | varDecls varDecl ";" { $$ = ast_var_decls($1, $2); };
 varDecl: "var" identList { $$ = ast_var_decl($2); };
 identList: identsym { $$ = ast_ident_list_singleton($1); }
             | identList "," identsym { $$ = ast_ident_list($1, $3); };
 
 procDecls: empty { $$ = ast_proc_decls_empty($1); }
             | procDecls procDecl { $$ = ast_proc_decls($1, $2); };
-procDecl: "proc" identsym block { $$ = ast_proc_decl($2, $3); };
+procDecl: "proc" identsym block ";" { $$ = ast_proc_decl($2, $3); };
 
 stmts: empty { $$ = ast_stmts_empty($1); }
         | stmtList { $$ = ast_stmts($1); };
-empty: %empty { $$ = ast_empty(file_name); } ;
+empty: %empty { file_location * loc = ast_file_loc(progast);
+        $$ = ast_empty(loc); };
 stmtList: stmt { $$ = ast_stmt_list_singleton($1); }
           | stmtList ";" stmt { $$ = ast_stmt_list($1, $3); };
 stmt: assignStmt { $$ = ast_stmt_assign($1); } | callStmt { $$ = ast_stmt_call($1); }
@@ -164,12 +165,13 @@ dbCondition: "divisible" expr "by" expr { $$ = ast_db_condition($2, $4); };
 relOpCondition: expr relOp expr { $$ = ast_rel_op_condition($1, $2, $3); };
 relOp: "=" | "!=" | "<" | "<=" | ">" | ">=";
 
-factor: identsym | numbersym | sign factor | "(" expr ")";
-term: factor | term "*" factor | term "/" factor;
 expr: expr "+" term | expr "-" term;
+term: factor | term "*" factor | term "/" factor;
+factor: identsym { $$ = ast_expr_ident($1); }| numbersym {$$ = ast_expr_number($1); }
+        | sign factor { $$ = ast_expr_signed_expr(1, $2);} | '(' expr ')' { $$ = 2; };
+sign: "-" | "+";
 
 
-sign: "-"| "+";
 
 
 %%
