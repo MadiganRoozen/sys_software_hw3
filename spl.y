@@ -10,7 +10,7 @@
 #include "ast.h"
 #include "machine_types.h"
 #include "parser_types.h"
-#include "lexer.h"
+#include "spl_lexer.h"
 
     /* Report an error to the user on stderr */
 extern void yyerror(const char *filename, const char *msg);
@@ -118,46 +118,46 @@ extern void setProgAST(block_t t);
 %%
  /* Write your grammar rules below and before the next %% */
 
-program: block periodsym;
+program: block "." { setProgAST($1); };
 
-block: beginsym constDecls varDecls procDecls stmts endsym;
+block: "begin" constDecls varDecls procDecls stmts "end" { $$ = ast_block($1, $2, $3, $4, $5); };
 
 constDecls: constDecl;
-constDecl: constsym constDefList;
-constDef: identsym eqsym numbersym;
-constDefList: constDef | constDef commasym constDef;
+constDecl: "const" constDefList;
+constDef: identsym "=" numbersym;
+constDefList: constDef | constDef "," constDef;
 
 
 varDecls: varDecl
-varDecl: varsym identList;
-identList: identsym | identList commasym identsym
+varDecl: "var" identList;
+identList: identsym | identList "," identsym
 
 procDecls: procDecl;
-procDecl: procsym identsym block;
+procDecl: "proc" identsym block;
 
 stmts: empty | stmtList;
-empty: {$$ = Null} %empty;
-stmtList: stmts | stmtList semisym stmt
+empty: %empty {$$ = ast_empty(yyin); } ;
+stmtList: stmts | stmtList ";" stmt
 stmt: assignStmt | callStmt | ifStmt | whileStmt | readStmt | printStmt | blockStmt;
-assignStmt: identsym becomessym expr;
-callStmt: callsym identsym;
-ifStmt: ifsym condition thensym stmts elsesym stmts endsym | ifsym condition thensym stmts endsym;
-whileStmt: whilesym condition dosym stmts endsym;
-readStmt: readsym identsym;
-printStmt: printsym expr;
+assignStmt: identsym ":=" expr;
+callStmt: "call" identsym;
+ifStmt: "if" condition "then" stmts "else" stmts "end" | "if" condition "then" stmts "end";
+whileStmt: "while" condition "do" stmts "end";
+readStmt: "read" identsym;
+printStmt: "print" expr;
 blockStmt: block;
 
 condition: dbCondition | relOpCondition;
-dbCondition: divisiblesym expr bysym expr;
+dbCondition: "divisible" expr "by" expr;
 relOpCondition: expr relOp expr;
-relOp: eqeqsym | neqsym | ltsym | leqsym | gtsym | geqsym;
+relOp: "=" | "!=" | "<" | "<=" | ">" | ">=";
 
-factor: identsym | numbersym | sign factor | lparensym expr rparensym;
-term: factor | term multsym factor | term divsym factor;
-expr: expr plussym term | expr minussym term;
+factor: identsym | numbersym | sign factor | "(" expr ")";
+term: factor | term "*" factor | term "/" factor;
+expr: expr "+" term | expr "-" term;
 
 
-sign: minussym | plussym;
+sign: "-"| "+";
 
 
 %%
