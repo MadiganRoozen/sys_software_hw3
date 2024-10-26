@@ -100,6 +100,7 @@ extern void yyerror(const char *filename, const char *msg);
 %type <expr> expr
 %type <expr> term
 %type <expr> factor
+%type <token> sign
 
 %start program
 
@@ -142,7 +143,7 @@ procDecl: "proc" identsym block ";" { $$ = ast_proc_decl($2, $3); };
 
 stmts: empty { $$ = ast_stmts_empty($1); }
         | stmtList { $$ = ast_stmts($1); };
-empty: %empty { file_location * loc = ast_file_loc(progast);
+empty: %empty { file_location * loc = file_location_make(lexer_filename(), lexer_line());
         $$ = ast_empty(loc); };
 stmtList: stmt { $$ = ast_stmt_list_singleton($1); }
           | stmtList ";" stmt { $$ = ast_stmt_list($1, $3); };
@@ -165,10 +166,10 @@ dbCondition: "divisible" expr "by" expr { $$ = ast_db_condition($2, $4); };
 relOpCondition: expr relOp expr { $$ = ast_rel_op_condition($1, $2, $3); };
 relOp: "=" | "!=" | "<" | "<=" | ">" | ">=";
 
-expr: expr "+" term | expr "-" term;
+expr: term | expr "+" term | expr "-" term;
 term: factor | term "*" factor | term "/" factor;
 factor: identsym { $$ = ast_expr_ident($1); }| numbersym {$$ = ast_expr_number($1); }
-        | sign factor { $$ = ast_expr_signed_expr(1, $2);} | '(' expr ')' { $$ = 2; };
+        | sign factor { $$ = ast_expr_signed_expr($1, $2);} | '(' expr ')' { $$ = $2; };
 sign: "-" | "+";
 
 
