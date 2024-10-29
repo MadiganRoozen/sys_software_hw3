@@ -10,7 +10,7 @@
 #include "ast.h"
 #include "machine_types.h"
 #include "parser_types.h"
-#include "spl_lexer.h"
+#include "lexer.h"
 
     /* Report an error to the user on stderr */
 extern void yyerror(const char *filename, const char *msg);
@@ -100,6 +100,7 @@ extern void yyerror(const char *filename, const char *msg);
 %type <expr> expr
 %type <expr> term
 %type <expr> factor
+%type <token> sign
 
 %start program
 
@@ -122,46 +123,59 @@ program: block "." { setProgAST($1); };
 
 block: "begin" constDecls varDecls procDecls stmts "end" { $$ = ast_block($1, $2, $3, $4, $5); };
 
-constDecls: constDecl;
-constDecl: "const" constDefList;
-constDef: identsym "=" numbersym;
-constDefList: constDef | constDef "," constDef;
+constDecls: empty { $$ = ast_const_decls_empty($1); }
+            | constDecls constDecl ";" { $$ = ast_const_decls($1, $2); };
+constDecl: "const" constDefList { $$ = ast_const_decl($2); };
+constDef: identsym "=" numbersym { $$ = ast_const_def($1, $3); };
+constDefList: constDef { $$ = ast_const_def_list_singleton($1); }
+              | constDefList "," constDef {$$ = ast_const_def_list($1, $3); };
 
 
-varDecls: varDecl
-varDecl: "var" identList;
-identList: identsym | identList "," identsym
+varDecls: empty { $$ = ast_var_decls_empty($1); }
+          | varDecls varDecl ";" { $$ = ast_var_decls($1, $2); };
+varDecl: "var" identList { $$ = ast_var_decl($2); };
+identList: identsym { $$ = ast_ident_list_singleton($1); }
+            | identList "," identsym { $$ = ast_ident_list($1, $3); };
 
-procDecls: procDecl;
-procDecl: "proc" identsym block;
+procDecls: empty { $$ = ast_proc_decls_empty($1); }
+            | procDecls procDecl { $$ = ast_proc_decls($1, $2); };
+procDecl: "proc" identsym block ";" { $$ = ast_proc_decl($2, $3); };
 
-stmts: empty | stmtList;
-empty: %empty {$$ = ast_empty(yyin); } ;
-stmtList: stmts | stmtList ";" stmt
-stmt: assignStmt | callStmt | ifStmt | whileStmt | readStmt | printStmt | blockStmt;
-assignStmt: identsym ":=" expr;
-callStmt: "call" identsym;
-ifStmt: "if" condition "then" stmts "else" stmts "end" | "if" condition "then" stmts "end";
-whileStmt: "while" condition "do" stmts "end";
-readStmt: "read" identsym;
-printStmt: "print" expr;
-blockStmt: block;
+stmts: empty { $$ = ast_stmts_empty($1); }
+        | stmtList { $$ = ast_stmts($1); };
+empty: %empty { file_location * loc = file_location_make(lexer_filename(), lexer_line());
+        $$ = ast_empty(loc); };
+stmtList: stmt { $$ = ast_stmt_list_singleton($1); }
+          | stmtList ";" stmt { $$ = ast_stmt_list($1, $3); };
+stmt: assignStmt { $$ = ast_stmt_assign($1); } | callStmt { $$ = ast_stmt_call($1); }
+      | ifStmt { $$ = ast_stmt_if($1); } | whileStmt { $$ = ast_stmt_while($1); }
+      | readStmt { $$ = ast_stmt_read($1); } | printStmt { $$ = ast_stmt_print($1); }
+      | blockStmt{ $$ = ast_stmt_block($1); };
+assignStmt: identsym ":=" expr { $$ = ast_assign_stmt($1, $3); };
+callStmt: "call" identsym { $$ = ast_call_stmt($2); };
+ifStmt: "if" condition "then" stmts "else" stmts "end" { $$ = ast_if_then_else_stmt($2, $4, $6); }
+        | "if" condition "then" stmts "end" { $$ = ast_if_then_stmt($2, $4); };
+whileStmt: "while" condition "do" stmts "end" { $$ = ast_while_stmt($2, $4); };
+readStmt: "read" identsym { $$ = ast_read_stmt($2); };
+printStmt: "print" expr { $$ = ast_print_stmt($2); };
+blockStmt: block { $$ = ast_block_stmt($1); };
 
-condition: dbCondition | relOpCondition;
-dbCondition: "divisible" expr "by" expr;
-relOpCondition: expr relOp expr;
+condition: dbCondition { $$ = ast_condition_db($1); } 
+            | relOpCondition { $$ = ast_condition_rel_op($1); };
+dbCondition: "divisible" expr "by" expr { $$ = ast_db_condition($2, $4); };
+relOpCondition: expr relOp expr { $$ = ast_rel_op_condition($1, $2, $3); };
 relOp: "=" | "!=" | "<" | "<=" | ">" | ">=";
 
-factor: identsym | numbersym | sign factor | "(" expr ")";
+expr: term | expr "+" term | expr "-" term;
 term: factor | term "*" factor | term "/" factor;
-expr: expr "+" term | expr "-" term;
+factor: identsym { $$ = ast_expr_ident($1); }| numbersym {$$ = ast_expr_number($1); }
+        | sign factor { $$ = ast_expr_signed_expr($1, $2);} | '(' expr ')' { $$ = $2; };
+sign: "-" | "+";
 
 
-sign: "-"| "+";
 
 
 %%
 
 // Set the program's ast to be ast
 void setProgAST(block_t ast) { progast = ast; }
-
