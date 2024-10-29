@@ -164,12 +164,12 @@ condition: dbCondition { $$ = ast_condition_db($1); }
             | relOpCondition { $$ = ast_condition_rel_op($1); };
 dbCondition: "divisible" expr "by" expr { $$ = ast_db_condition($2, $4); };
 relOpCondition: expr relOp expr { $$ = ast_rel_op_condition($1, $2, $3); };
-relOp: "=" | "!=" | "<" | "<=" | ">" | ">=";
+relOp: "==" | "!=" | "<" | "<=" | ">" | ">=";
 
-expr: term | expr "+" term | expr "-" term;
-term: factor | term "*" factor | term "/" factor;
+expr: term | expr "+" term {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));}| expr "-" term {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));};
+term: factor | term "*" factor {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));} | term "/" factor {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));};
 factor: identsym { $$ = ast_expr_ident($1); }| numbersym {$$ = ast_expr_number($1); }
-        | sign factor { $$ = ast_expr_signed_expr($1, $2);} | '(' expr ')' { $$ = $2; };
+        | sign factor { $$ = ast_expr_signed_expr($1, $2);} | "(" expr ")"
 sign: "-" | "+";
 
 
