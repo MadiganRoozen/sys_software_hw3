@@ -36,15 +36,13 @@ int main(int argc, char *argv[])
     // unparse to check on the AST
     unparseProgram(stdout, progast);
 
-    // comment out the next two commands to disable declaration checking
-
     // building symbol table
     //change for part 2
-    //symtab_initialize();
+    symtab_initialize();
 
     // check for duplicate declarations
     //change for part 2
-    //scope_check_program(progast);
+    scope_check_program(progast);
 
     return EXIT_SUCCESS;
 }
