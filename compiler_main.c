@@ -4,8 +4,8 @@
 #include "lexer.h"
 #include "ast.h"
 //edited to make debugging parser easier, change back for part 2
-//#include "symtab.h"
-//#include "scope_check.h"
+#include "symtab.h"
+#include "scope_check.h"
 #include "utilities.h"
 #include "unparser.h"
 
