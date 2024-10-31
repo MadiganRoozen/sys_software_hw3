@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "parser.h"//not sure if this is needed here, but leaving it in case
+#include "parser.h"
 #include "id_attrs.h"
 #include "ast.h"
 #include "symtab.h"
@@ -8,5 +8,10 @@
 #include "utilities.h"
 #include "id_use.h"
 
-//checks the program's ast for 
-extern void scope_check_program(block_t program_AST);
+//struct for scope objects to be put into SymbolTable
+typedef struct Scope{
+
+} Scope;
+
+//creates a Scope object 
+extern Scope create();
