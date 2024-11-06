@@ -41,7 +41,8 @@ SUBMISSIONZIPFILE = submission.zip
 COMPILER_OBJECTS =\
 		$(SPL).tab.o $(SPL)_lexer.o \
 		$(COMPILER)_main.o parser.o unparser.o id_use.o \
-		id_attrs.o ast.o file_location.o utilities.o
+		id_attrs.o ast.o file_location.o utilities.o \
+		scope_check.o symtab.o
 
 # If you want to test the lexical analysis part separately,
 # then you might want to build the lexer,
@@ -93,6 +94,12 @@ $(SPL).tab.o: $(SPL).tab.c $(SPL).tab.h
 
 $(SPL).tab.c $(SPL).tab.h: $(SPL).y ast.h parser_types.h machine_types.h 
 	$(YACC) $(YACCFLAGS) $(SPL).y
+
+$(SPL).scope_check.o: $(SPL).scope_check.c $(SPL).scope_check.h
+	$(CC) $(CFLAGS) -c $<
+
+$(SPL).symtab.o: $(SPL).symtab.c $(SPL).symtab.h
+	$(CC) $(CFLAGS) -c $<
 
 .PHONY: start-bison-file
 start-bison-file:

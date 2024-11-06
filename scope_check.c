@@ -7,3 +7,7 @@
 #include "scope_check.h"
 #include "utilities.h"
 #include "id_use.h"
+
+void scope_check_program(block_t program_AST) {
+	
+}
