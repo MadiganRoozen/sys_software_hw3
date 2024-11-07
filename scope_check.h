@@ -6,5 +6,21 @@
 #include "utilities.h"
 #include "id_use.h"
 
-//checks the program's ast for 
+//LinkedList Data Structures
+
+typedef struct ident_node {
+	char* ident;
+	ident_node* next;
+	ident_node* prev;
+} ident_node;
+
+typedef struct Node {
+	int scope;
+	Node* next;
+	Node* prev;
+	ident_node* idents;
+} Node;
+
+
+
 void scope_check_program(block_t program_AST);

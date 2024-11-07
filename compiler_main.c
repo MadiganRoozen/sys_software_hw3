@@ -4,7 +4,6 @@
 #include "lexer.h"
 #include "ast.h"
 //edited to make debugging parser easier, change back for part 2
-#include "symtab.h"
 #include "scope_check.h"
 #include "utilities.h"
 #include "unparser.h"
@@ -33,16 +32,12 @@ int main(int argc, char *argv[])
     // parsing
     block_t progast = parseProgram(argv[1]);
 
-    // unparse to check on the AST
-    unparseProgram(stdout, progast);
-
-    // building symbol table
-    //change for part 2
-    symtab_initialize();
-
-    // check for duplicate declarations
+    // check if declared already / not declared errors
     //change for part 2
     scope_check_program(progast);
+
+    // unparse to check on the AST
+    unparseProgram(stdout, progast);
 
     return EXIT_SUCCESS;
 }
