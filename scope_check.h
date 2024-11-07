@@ -10,17 +10,29 @@
 
 typedef struct ident_node {
 	char* ident;
-	ident_node* next;
-	ident_node* prev;
+	struct ident_node* next;
+	struct ident_node* prev;
 } ident_node;
 
-typedef struct Node {
+typedef struct scope_node {
 	int scope;
-	Node* next;
-	Node* prev;
+	struct scope_node* next;
+	struct scope_node* prev;
 	ident_node* idents;
-} Node;
+} scope_node;
 
+typedef struct linked_list {
+	scope_node* head;
+	scope_node* tail;
+} linked_list;
 
 
 void scope_check_program(block_t program_AST);
+
+void add_scope_node(linked_list* list, int scope);
+
+void remove_scope_node(linked_list* list);
+
+void add_ident_node(ident_node* node, char* ident);
+
+void free_ident_list(scope_node* node);
