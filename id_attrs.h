@@ -21,8 +21,7 @@ typedef struct {
 // and its offset_count set to ofst_cnt.
 // If there is no space, bail with an error message,
 // so this should never return NULL.
-extern id_attrs *create_id_attrs(file_location floc, id_kind k,
-				 unsigned int ofst_cnt);
+extern id_attrs *create_id_attrs(file_location floc, id_kind k, unsigned int ofst_cnt);
 
 // Return a lowercase version of the kind's name as a string
 // (i.e. if k == variable_idk, return "variable"

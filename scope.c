@@ -76,7 +76,7 @@ void scope_insert(scope_t *s, const char *name, id_attrs *attrs)
     }
     new_assoc->id = name;
     new_assoc->attrs = attrs;
-    scope_add(s, new_assoc);
+    scope_add(s, new_assoc); 
 }
 
 // Requires: name != NULL;
