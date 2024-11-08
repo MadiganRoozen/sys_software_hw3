@@ -4,6 +4,8 @@
 #include "lexer.h"
 #include "ast.h"
 //edited to make debugging parser easier, change back for part 2
+#include "scope.h"
+#include "symtab.h"
 #include "scope_check.h"
 #include "utilities.h"
 #include "unparser.h"
@@ -34,6 +36,9 @@ int main(int argc, char *argv[])
 
     // check if declared already / not declared errors
     //change for part 2
+
+    symtab_initialize();
+
     scope_check_program(progast);
 
     // unparse to check on the AST
