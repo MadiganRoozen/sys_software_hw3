@@ -30,12 +30,14 @@ void scope_check_block(block_t* prog) {
 	symtab_enter_scope();
 
 	//Checking Declarations
-	scope_check_constDecls(prog->const_decls);
-	scope_check_varDecls(prog->var_decls);
-	scope_check_procDecls(prog->proc_decls);
+		scope_check_constDecls(prog->const_decls);
+
+		scope_check_varDecls(prog->var_decls);
+
+		scope_check_procDecls(prog->proc_decls);
 
 	//Checking Statements
-	scope_check_stmts(prog->stmts);
+		scope_check_stmts(prog->stmts);
 
 	symtab_leave_scope();
 
@@ -43,7 +45,11 @@ void scope_check_block(block_t* prog) {
 
 void scope_check_constDecls(const_decls_t consts) {
 
+	if (consts.start == NULL)
+		return;
+
 	const_decl_t *cdp = consts.start;
+
 	id_kind idk = constant_idk;
 
 	while (cdp != NULL) {
@@ -62,6 +68,9 @@ void scope_check_constDecls(const_decls_t consts) {
 
 void scope_check_procDecls(proc_decls_t procs) {
 
+	if (procs.proc_decls == NULL)
+		return;
+
 	proc_decl_t *pdp = procs.proc_decls;
 	id_kind idk = procedure_idk;
 
@@ -79,6 +88,10 @@ void scope_check_procDecls(proc_decls_t procs) {
 // build the symbol table and check the declarations in vds
 void scope_check_varDecls(var_decls_t vds)
 {
+
+	if (vds.var_decls == NULL)
+		return;
+
     var_decl_t *vdp = vds.var_decls;
     id_kind idk = variable_idk;
 
@@ -138,6 +151,10 @@ void scope_check_declare_ident(ident_t id, id_kind t)
 // Return the modified AST with id_use pointers
 void scope_check_stmts(stmts_t stmts)
 {
+
+	if (stmts.stmt_list.start == NULL)
+		return;
+	
     stmt_t *sp = stmts.stmt_list.start;
     while (sp != NULL) {
 		scope_check_stmt(*sp);

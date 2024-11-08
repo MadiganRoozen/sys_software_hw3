@@ -42,9 +42,9 @@ int main(int argc, char *argv[])
     // unparse to check on the AST
     unparseProgram(stdout, progast);
 
-    symtab_initialize();
+    // symtab_initialize();
 
-    scope_check_program(progast);
+    // scope_check_program(progast);
 
     return EXIT_SUCCESS;
 }
