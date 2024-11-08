@@ -37,12 +37,14 @@ int main(int argc, char *argv[])
     // check if declared already / not declared errors
     //change for part 2
 
-    symtab_initialize();
-
-    scope_check_program(progast);
+    
 
     // unparse to check on the AST
     unparseProgram(stdout, progast);
+
+    symtab_initialize();
+
+    scope_check_program(progast);
 
     return EXIT_SUCCESS;
 }
