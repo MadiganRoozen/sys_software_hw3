@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "parser.h"//not sure if this is needed here, but leaving it in case
 #include "id_attrs.h"
 #include "ast.h"
 #include "utilities.h"
 #include "id_use.h"
 
+
 //LinkedList Data Structures
 
 typedef struct ident_node {
 	char* ident;
 	struct ident_node* next;
-	struct ident_node* prev;
 } ident_node;
 
 typedef struct scope_node {
@@ -19,6 +20,7 @@ typedef struct scope_node {
 	struct scope_node* next;
 	struct scope_node* prev;
 	ident_node* idents;
+	ident_node* idents_tail;
 } scope_node;
 
 typedef struct linked_list {
