@@ -35,9 +35,12 @@ void scope_check_block(linked_list* scope_list, block_t prog) {
 		scope_check_const_decls(scope_list->tail, prog.consts_decls);
 
 		//Variables
-
+		scope_check_var_decls(scope_list->tail, prog.var_decls);
 
 		//Procedures
+
+	//Checking Statements
+		
 
 }
 
@@ -50,7 +53,7 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 
 	const_decl_t* const_decl = consts_decls.start;
 
-	//For Each Constant Declaration List in Node 
+	//For Each Constant Declaration List in Scope
 	while (const_decl != NULL) {
 		const_def_list_t const_list = const_decl.const_def_list;
 
@@ -74,6 +77,29 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 		}
 
 	}
+}
+
+void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
+
+	//Base Case - No Declarations Present
+	if (vars_decls.var_decls == NULL)
+		return;
+
+	var_decl_t* var_decl = vars_decls.var_decls;
+
+	//For Each Variable Declaration List in Scope
+	while (var_decl != NULL) {
+		ident_list_t ident_list = var_decl->ident_list;
+
+		if (ident_list.start == NULL) {
+			var_decl = vars_decl->next;
+			continue;
+		}
+
+		//Ending Here for Night
+
+	}
+
 }
 
 //Adds a new Scope Node to the End of the List
@@ -127,12 +153,12 @@ void scope_check_leave_scope(linked_list* list) {
 }
 
 //Add an Ident Node to the end of the Ident List
-void scope_check_declare_ident(scope_node* cur_scope, char* ident) {
+void scope_check_declare_ident(scope_node* cur_scope, ident_t ident) {
 
 	//Check if Ident Is Present In Scope Declaration Already
 		//In Declarations Already - Bail With Error
 		if (scope_check_in_scope_decl(cur_scope, ident)) {
-
+			bail_with_prog_error(ident.file_loc, "Variable \"%s\" has already been declared!", ident.name);
 		}
 		//Not In Declarations Yet - Declare
 		else {
@@ -156,9 +182,20 @@ void scope_check_declare_ident(scope_node* cur_scope, char* ident) {
 		}
 }
 
-bool scope_check_in_scope_decl(scope_node* cur_scope, char* ident) {
+bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t ident) {
 
-	if ()
+	//Base Case - No Idents Present In Scope
+	if (cur_scope->idents == NULL)
+		return false;
+
+	ident_t* identifier = cur_scope->idents;
+
+	while (identifier != NULL) {
+		if (strcmp(identifier->name, ident.name) == 0)
+			return true;
+	}
+
+	return false;
 }
 
 //Free ident list inside a scope_node
