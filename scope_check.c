@@ -19,29 +19,32 @@ void scope_check_program(block_t program_AST) {
 	scope_list->head = NULL;
 	scope_list->tail = NULL;
 
-	scope_check_block(scope_list, program_AST);
+	scope_check_block(scope_list, &program_AST);
 
 
 }
 
 //Starts all Declaration Checking of AST
-void scope_check_block(linked_list* scope_list, block_t prog) {
+void scope_check_block(linked_list* scope_list, block_t* prog) {
 
 	//Entering new Scope
 	scope_check_enter_scope(scope_list);
 
 	//Checking Declarations
 		//Constants
-		scope_check_const_decls(scope_list->tail, prog.consts_decls);
+		scope_check_const_decls(scope_list->tail, prog->consts_decls);
 
 		//Variables
-		scope_check_var_decls(scope_list->tail, prog.var_decls);
+		scope_check_var_decls(scope_list->tail, prog->var_decls);
 
 		//Procedures
+		scope_check_proc_decls(scope_list, prog->proc_decls);
 
 	//Checking Statements
-		
+	scope_check_statements(scope_list->tail, prog->stmts);
 
+	//Leaving Scope of Block
+	scope_check_leave_scope(scope_list);
 }
 
 //Checks all Constant Declarations for Declaration Errors
@@ -96,11 +99,161 @@ void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 			continue;
 		}
 
-		//Ending Here for Night
+		ident_t* ident = var_decl.start;
 
+		while (ident != NULL) {
+			scope_check_declare_ident(cur_scope, ident);
+			ident = ident->next;
+		}
 	}
 
 }
+
+void scope_check_proc_decls(linked_list* scope_list, proc_decls_t procs_decls) {
+
+	//Base Case - No Declarations Present
+	if (procs_decls.proc_decls == NULL)
+		return;
+
+	proc_decl_t* proc_decl = procs_decls.proc_decls;
+
+	while (proc_decl != NULL) {
+		ident_t* ident = malloc(sizeof(ident_t));
+		ident->name = proc_decl->name
+		ident->file_loc = proc_decl->file_loc;
+		ident->AST_type = proc_decl->AST_type;
+		ident->next = NULL;
+
+		scope_check_declare_ident(scope_list->tail, ident);
+
+		free(ident);
+
+		scope_check_block(scope_list, proc_decl->block);
+	}
+
+}
+
+void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
+
+	//Base Case - No Statements Present
+	if (stmts.stmts_kind == empty_stmts_e)
+		return;
+
+	stmt_list_t state_list = stmts.stmt_list;
+
+	//No Statements in List
+	if (state_list.start == NULL)
+		return;
+
+	stmt_t* stmt = state_list.start;
+
+	while (stmt != NULL) {
+
+		switch (stmt->stmt_kind) {
+
+			case assign_stmt_t:
+				scope_check_assign_stmt(scope_list->tail, stmt);
+				break;
+
+			case call_stmt_t:
+
+				break;
+
+			case if_stmt_t:
+
+				break;
+
+			case while_stmt_t:
+
+				break;
+
+			case read_stmt_t:
+
+				break;
+
+			case print_stmt_t:
+
+				break;
+
+			case block_stmt_t:
+				scope_check_block(scope_list, stmt->block);
+				break;
+
+			default:
+
+				break;
+		}
+
+		stmt = stmt->next;
+
+	}
+}
+
+void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt) {
+
+	//Checking Identifier
+		//Creating Ident_t for Identifier Name
+		ident_t* ident = malloc(sizeof(ident_t));
+		ident->name = stmt->name
+		ident->file_loc = stmt->file_loc;
+		ident->AST_type = stmt->AST_type;
+		ident->next = NULL;
+
+		//Checking Ident
+		scope_check_declare_ident(cur_scope, ident);
+
+		//Free - No Longer Needed
+		free(ident);
+
+	//Checking Expression
+	scope_check_expr(cur_scope, stmt->expr);
+
+
+}
+
+void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
+
+	//Base Case - No Expression
+	if (expr == NULL)
+		return;
+
+	switch (expr.expr_kind) {
+
+		case expr_bin:
+			scope_check_bin_expr(cur_scope, expr);
+			break;
+
+		case expr_negated:
+			scope_check_neg_expr(cur_scope, expr);
+			break;
+
+		case expr_ident:
+			scope_check_in_scope_vis(cur_scope, expr);
+			break;
+
+		case expr_number:
+			
+			break;
+
+		default:
+
+			break;
+	}
+}
+
+void scope_check_bin_expr(scope_node* cur_scope, expr_t* expr) {
+
+}
+
+void scope_check_neg_expr(scope_node* cur_scope, expr_t* expr) {
+
+}
+
+void scope_check_in_scope_vis(scope_node* cur_scope, expr_t* expr) {
+
+}
+
+
 
 //Adds a new Scope Node to the End of the List
 void scope_check_enter_scope(linked_list* list) {
