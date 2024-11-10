@@ -32,7 +32,7 @@ void scope_check_block(linked_list* scope_list, block_t* prog) {
 
 	//Checking Declarations
 		//Constants
-		scope_check_const_decls(scope_list->tail, prog->consts_decls);
+		scope_check_const_decls(scope_list->tail, prog->const_decls);
 
 		//Variables
 		scope_check_var_decls(scope_list->tail, prog->var_decls);
@@ -41,7 +41,7 @@ void scope_check_block(linked_list* scope_list, block_t* prog) {
 		scope_check_proc_decls(scope_list, prog->proc_decls);
 
 	//Checking Statements
-	scope_check_statements(scope_list->tail, prog->stmts);
+	scope_check_statements(scope_list, prog->stmts);
 
 	//Leaving Scope of Block
 	scope_check_leave_scope(scope_list);
@@ -58,7 +58,7 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 
 	//For Each Constant Declaration List in Scope
 	while (const_decl != NULL) {
-		const_def_list_t const_list = const_decl.const_def_list;
+		const_def_list_t const_list = const_decl->const_def_list;
 
 		//Base Case - No Declarations Present
 		if (const_list.start == NULL) {
@@ -70,13 +70,10 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 
 		//For Each Constant Declaration List
 		while (const_def != NULL) {
-			ident_t ident = const_def.ident;
+			ident_t ident = const_def->ident;
 
-			//For Each Ident in Ident List
-			while (ident != NULL) {
-				scope_check_declare_ident(cur_scope, ident);
-				ident = ident->next;
-			}
+			scope_check_declare_ident(cur_scope, &ident);
+			
 		}
 
 	}
@@ -95,11 +92,11 @@ void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 		ident_list_t ident_list = var_decl->ident_list;
 
 		if (ident_list.start == NULL) {
-			var_decl = vars_decl->next;
+			var_decl = var_decl->next;
 			continue;
 		}
 
-		ident_t* ident = var_decl.start;
+		ident_t* ident = ident_list.start;
 
 		while (ident != NULL) {
 			scope_check_declare_ident(cur_scope, ident);
@@ -119,14 +116,14 @@ void scope_check_proc_decls(linked_list* scope_list, proc_decls_t procs_decls) {
 
 	while (proc_decl != NULL) {
 		ident_t* ident = malloc(sizeof(ident_t));
-		ident->name = proc_decl->name
+		ident->name = proc_decl->name;
 		ident->file_loc = proc_decl->file_loc;
-		ident->AST_type = proc_decl->AST_type;
+		ident->type_tag = proc_decl->type_tag;
 		ident->next = NULL;
 
 		scope_check_declare_ident(scope_list->tail, ident);
 
-		free(ident);
+		// free(ident);
 
 		scope_check_block(scope_list, proc_decl->block);
 	}
@@ -151,32 +148,32 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 
 		switch (stmt->stmt_kind) {
 
-			case assign_stmt_t:
+			case assign_stmt:
 				scope_check_assign_stmt(scope_list->tail, stmt);
 				break;
 
-			case call_stmt_t:
+			case call_stmt:
 
 				break;
 
-			case if_stmt_t:
+			case if_stmt:
 
 				break;
 
-			case while_stmt_t:
+			case while_stmt:
 
 				break;
 
-			case read_stmt_t:
+			case read_stmt:
 
 				break;
 
-			case print_stmt_t:
+			case print_stmt:
 
 				break;
 
-			case block_stmt_t:
-				scope_check_block(scope_list, stmt->block);
+			case block_stmt:
+				scope_check_block(scope_list, stmt->data.block_stmt.block);
 				break;
 
 			default:
@@ -194,19 +191,19 @@ void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt) {
 	//Checking Identifier
 		//Creating Ident_t for Identifier Name
 		ident_t* ident = malloc(sizeof(ident_t));
-		ident->name = stmt->name
-		ident->file_loc = stmt->file_loc;
-		ident->AST_type = stmt->AST_type;
+		ident->name = stmt->data.assign_stmt.name;
+		ident->file_loc = stmt->data.assign_stmt.file_loc;
+		ident->type_tag = stmt->data.assign_stmt.type_tag;
 		ident->next = NULL;
 
 		//Checking Ident
 		scope_check_declare_ident(cur_scope, ident);
 
 		//Free - No Longer Needed
-		free(ident);
+		// free(ident);
 
 	//Checking Expression
-	scope_check_expr(cur_scope, stmt->expr);
+	scope_check_expr(cur_scope, stmt->data.assign_stmt.expr);
 
 
 }
@@ -217,7 +214,7 @@ void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
 	if (expr == NULL)
 		return;
 
-	switch (expr.expr_kind) {
+	switch (expr->expr_kind) {
 
 		case expr_bin:
 			scope_check_bin_expr(cur_scope, expr);
@@ -265,7 +262,7 @@ void scope_check_enter_scope(linked_list* list) {
 	s_node->next = NULL;
 	s_node->prev = NULL;
 	s_node->idents = NULL;
-	s_node->ident_tail = NULL;
+	s_node->idents_tail = NULL;
 
 	if (list->head == NULL) {
 		list->head = s_node;
@@ -297,7 +294,7 @@ void scope_check_leave_scope(linked_list* list) {
 
 	scope_node* new_tail = list->tail->prev;
 
-	free_ident_list(list->tail);
+	scope_check_free_ident_list(list->tail);
 
 	free(list->tail);
 	list->tail = new_tail;
@@ -306,20 +303,20 @@ void scope_check_leave_scope(linked_list* list) {
 }
 
 //Add an Ident Node to the end of the Ident List
-void scope_check_declare_ident(scope_node* cur_scope, ident_t ident) {
+void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident) {
 
 	//Check if Ident Is Present In Scope Declaration Already
 		//In Declarations Already - Bail With Error
 		if (scope_check_in_scope_decl(cur_scope, ident)) {
-			bail_with_prog_error(ident.file_loc, "Variable \"%s\" has already been declared!", ident.name);
+			bail_with_prog_error(*(ident->file_loc), "Variable \"%s\" has already been declared!", ident->name);
 		}
 		//Not In Declarations Yet - Declare
 		else {
 			//New Node
 			ident_node* new_node = malloc(sizeof(ident_node));
 			new_node->next = NULL;
-			new_node->ident = malloc(strlen(ident));
-			strcpy(new_node->ident, ident);
+			new_node->ident = malloc(strlen(ident->name));
+			strcpy(new_node->ident, ident->name);
 
 			//Check if Ident List in Scope is Empty
 			if (cur_scope->idents == NULL) {
@@ -335,16 +332,16 @@ void scope_check_declare_ident(scope_node* cur_scope, ident_t ident) {
 		}
 }
 
-bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t ident) {
+bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident) {
 
 	//Base Case - No Idents Present In Scope
 	if (cur_scope->idents == NULL)
 		return false;
 
-	ident_t* identifier = cur_scope->idents;
+	ident_node* identifier = cur_scope->idents;
 
 	while (identifier != NULL) {
-		if (strcmp(identifier->name, ident.name) == 0)
+		if (strcmp(identifier->ident, ident->name) == 0)
 			return true;
 	}
 

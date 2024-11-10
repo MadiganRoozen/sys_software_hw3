@@ -31,10 +31,32 @@ typedef struct linked_list {
 
 void scope_check_program(block_t program_AST);
 
-void add_scope_node(linked_list* list, int scope);
+void scope_check_block(linked_list* scope_list, block_t* prog);
 
-void remove_scope_node(linked_list* list);
+void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls);
 
-void add_ident_node(ident_node* node, char* ident);
+void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls);
 
-void free_ident_list(scope_node* node);
+void scope_check_proc_decls(linked_list* scope_list, proc_decls_t procs_decls);
+
+void scope_check_statements(linked_list* scope_list, stmts_t stmts);
+
+void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt);
+
+void scope_check_expr(scope_node* cur_scope, expr_t* expr);
+
+void scope_check_bin_expr(scope_node* cur_scope, expr_t* expr);
+
+void scope_check_neg_expr(scope_node* cur_scope, expr_t* expr);
+
+void scope_check_in_scope_vis(scope_node* cur_scope, expr_t* expr);
+
+void scope_check_enter_scope(linked_list* list);
+
+void scope_check_leave_scope(linked_list* list);
+
+void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident);
+
+bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident);
+
+void scope_check_free_ident_list(scope_node* node);
