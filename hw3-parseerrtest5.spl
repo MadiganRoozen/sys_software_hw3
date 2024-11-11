@@ -1,4 +1,4 @@
-% $Id: hw3-parseerrtest5.spl,v 1.4 2024/09/17 20:58:21 leavens Exp $
+% $Id: hw3-parseerrtest5.spl,v 1.5 2024/10/31 11:55:44 leavens Exp leavens $
 begin
   var x, y, z;
   begin
@@ -15,7 +15,7 @@ begin
                   while z < x
                   do
                     if z < y
-                    then z := z+y*w
+                    then z := z+y*x;
                     else z := z+1
                     end
                   end

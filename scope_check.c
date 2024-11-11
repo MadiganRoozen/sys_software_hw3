@@ -49,7 +49,7 @@ void scope_check_block(linked_list* scope_list, block_t* prog) {
 
 //Checks all Constant Declarations for Declaration Errors
 void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) {
-
+	// printf("checking consts\n");
 	//Base Case - No Declarations Present
 	if (consts_decls.start == NULL)
 		return;
@@ -80,7 +80,7 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 }
 
 void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
-
+	// printf("checking vars\n");
 	//Base Case - No Declarations Present
 	if (vars_decls.var_decls == NULL)
 		return;
@@ -107,7 +107,7 @@ void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 }
 
 void scope_check_proc_decls(linked_list* scope_list, proc_decls_t procs_decls) {
-
+	// printf("checking procs\n");
 	//Base Case - No Declarations Present
 	if (procs_decls.proc_decls == NULL)
 		return;
@@ -434,7 +434,7 @@ void scope_check_leave_scope(linked_list* list) {
 
 //Add an Ident Node to the end of the Ident List
 void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident) {
-
+	// printf("checking ident\n");
 	//Check if Ident Is Present In Scope Declaration Already
 		//In Declarations Already - Bail With Error
 		if (scope_check_in_scope_decl(cur_scope, ident)) {
@@ -473,6 +473,8 @@ bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident) {
 	while (identifier != NULL) {
 		if (strcmp(identifier->ident, ident->name) == 0)
 			return true;
+		
+		identifier = identifier->next;
 	}
 
 	return false;

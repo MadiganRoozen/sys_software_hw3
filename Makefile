@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.55 2024/10/09 18:39:54 leavens Exp $
+# $Id: Makefile,v 1.57 2024/10/31 19:24:47 leavens Exp leavens $
 # Makefile for parser and static analysis in COP 3402
 
 # Add .exe to the end of target to get that suffix in the rules
@@ -37,12 +37,10 @@ SUBMISSIONZIPFILE = submission.zip
 # You should not need the machine_types.o file
 # and there is no parser_types.c file provided,
 # but you could add machine_types.o and parser_types.o if need be.
-# scope.o scope_check.o symtab.o \ 
-COMPILER_OBJECTS =\
+COMPILER_OBJECTS = scope_check.o \
 		$(SPL).tab.o $(SPL)_lexer.o \
 		$(COMPILER)_main.o parser.o unparser.o id_use.o \
-		id_attrs.o ast.o file_location.o utilities.o \
-		scope_check.o
+		id_attrs.o ast.o file_location.o utilities.o
 
 # If you want to test the lexical analysis part separately,
 # then you might want to build the lexer,
@@ -70,7 +68,7 @@ DECLERRTESTS = hw3-declerrtest0.spl hw3-declerrtest1.spl hw3-declerrtest2.spl \
 	hw3-declerrtest3.spl hw3-declerrtest4.spl hw3-declerrtest5.spl \
 	hw3-declerrtest6.spl hw3-declerrtest7.spl hw3-declerrtest8.spl \
 	hw3-declerrtest9.spl hw3-declerrtestA.spl hw3-declerrtestB.spl \
-	hw3-declerrtestC.spl
+	hw3-declerrtestC.spl hw3-declerrtestD.spl
 DECLTESTS = $(SCOPETESTS) $(DECLERRTESTS)
 GOODTESTS = $(ASTTESTS) $(REGULARTESTS) $(SCOPETESTS)
 BADTESTS = $(ERRTESTS) $(PARSEERRTESTS) $(DECLERRTESTS)
@@ -92,11 +90,11 @@ $(COMPILER)_main.o: $(COMPILER)_main.c
 $(SPL).tab.o: $(SPL).tab.c $(SPL).tab.h
 	$(CC) $(CFLAGS) -c $<
 
-$(SPL).tab.c $(SPL).tab.h: $(SPL).y ast.h parser_types.h machine_types.h 
-	$(YACC) $(YACCFLAGS) $(SPL).y
-
 $(SPL).scope_check.o: $(SPL).scope_check.c $(SPL).scope_check.h
 	$(CC) $(CFLAGS) -c $<
+
+$(SPL).tab.c $(SPL).tab.h: $(SPL).y ast.h parser_types.h machine_types.h 
+	$(YACC) $(YACCFLAGS) $(SPL).y
 
 .PHONY: start-bison-file
 start-bison-file:
@@ -120,6 +118,9 @@ $(LEXER): $(LEXER_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(LEXER)_main.o: $(LEXER)_main.c
+	$(CC) $(CFLAGS) -c $<
+
+ast.o: ast.c ast.h $(SPL).tab.h
 	$(CC) $(CFLAGS) -c $<
 
 # rule for compiling individual .c files
@@ -216,7 +217,7 @@ $(SUBMISSIONZIPFILE): *.c *.h $(STUDENTTESTOUTPUTS)
 	$(ZIP) $(SUBMISSIONZIPFILE) $(STUDENTTESTOUTPUTS) $(ALLTESTS) $(EXPECTEDOUTPUTS)
 
 .PHONY: compile-separately check-separately
-compile-separately check-separately: spl_lexer.c spl.tab.c
+compile-separately check-separately: spl_lexer.c $(SPL).tab.c
 	@for f in *.c ; \
 	do echo $(CC) $(CFLAGS) -c $$f ; \
 	   if test "$$f" = "$(SPL)_lexer.c" ; \
