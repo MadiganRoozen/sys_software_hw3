@@ -73,9 +73,17 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 		while (const_def != NULL) {
 			ident_t ident = const_def->ident;
 			// printf("checking const dec\n");
-			scope_check_declare_ident(cur_scope, &ident);
+
+			char* var_type = malloc(sizeof(char)*9);
+			strcpy(var_type, "constant");
+
+			scope_check_declare_ident(cur_scope, &ident, var_type);
+
+			const_def = const_def->next;
 			
 		}
+
+		const_decl = const_decl->next;
 
 	}
 }
@@ -93,18 +101,24 @@ void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 		ident_list_t ident_list = var_decl->ident_list;
 
 		if (ident_list.start == NULL) {
-			var_decl = var_decl->next;
-			continue;
-			// return;
+			// var_decl = var_decl->next;
+			// continue;
+			return;
 		}
 
 		ident_t* ident = ident_list.start;
 
 		while (ident != NULL) {
-			// printf("checking ident: %s\n", ident->name);
-			scope_check_declare_ident(cur_scope, ident);
+			// printf("declaring var ident: %s\n", ident->name);
+
+			char* var_type = malloc(sizeof(char)*9);
+			strcpy(var_type, "variable");
+
+			scope_check_declare_ident(cur_scope, ident, var_type);
 			ident = ident->next;
 		}
+
+		var_decl = var_decl->next;
 	}
 
 }
@@ -124,11 +138,16 @@ void scope_check_proc_decls(linked_list* scope_list, proc_decls_t procs_decls) {
 		ident->type_tag = proc_decl->type_tag;
 		ident->next = NULL;
 
-		scope_check_declare_ident(scope_list->tail, ident);
+		char* var_type = malloc(sizeof(char)*10);
+		strcpy(var_type, "procedure");
+
+		scope_check_declare_ident(scope_list->tail, ident, var_type);
 
 		// free(ident);
 
 		scope_check_block(scope_list, proc_decl->block);
+
+		proc_decl = proc_decl->next;
 	}
 
 }
@@ -190,7 +209,7 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 }
 
 void scope_check_assign_stmt(scope_node* cur_scope, assign_stmt_t stmt) {
-	// printf("checking assignment\n");
+	// printf("checking assignment of %s\n", stmt.name);
 	//Checking Identifier
 		//Creating Ident_t for Identifier Name
 		ident_t* ident = malloc(sizeof(ident_t));
@@ -370,7 +389,7 @@ void scope_check_in_scope_vis(scope_node* cur_scope, ident_t ident) {
 
 		while (identifiers != NULL) {
 
-			if (strcmp(identifiers->ident, ident.name) == 0)
+			if (strcmp(identifiers->name, ident.name) == 0)
 				return;
 
 			identifiers = identifiers->next;
@@ -436,20 +455,24 @@ void scope_check_leave_scope(linked_list* list) {
 }
 
 //Add an Ident Node to the end of the Ident List
-void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident) {
+void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident, char* type) {
 	// printf("checking ident dec\n");
 	//Check if Ident Is Present In Scope Declaration Already
+	ident_node* decl_found = scope_check_in_scope_decl(cur_scope, ident);
+
 		//In Declarations Already - Bail With Error
-		if (scope_check_in_scope_decl(cur_scope, ident)) {
-			bail_with_prog_error(*(ident->file_loc), "Variable \"%s\" has already been declared!", ident->name);
+		if (decl_found != NULL) {
+
+			bail_with_prog_error(*(ident->file_loc), "%s \"%s\" is already declared as a %s", type, ident->name, decl_found->var_type);
 		}
 		//Not In Declarations Yet - Declare
 		else {
 			//New Node
 			ident_node* new_node = malloc(sizeof(ident_node));
 			new_node->next = NULL;
-			new_node->ident = malloc(strlen(ident->name));
-			strcpy(new_node->ident, ident->name);
+			new_node->name = malloc(strlen(ident->name));
+			strcpy(new_node->name, ident->name);
+			new_node->var_type = type;
 
 			//Check if Ident List in Scope is Empty
 			if (cur_scope->idents == NULL) {
@@ -465,27 +488,27 @@ void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident) {
 		}
 }
 
-bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident) {
+ident_node* scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident) {
 
 	//Base Case - No Idents Present In Scope
 	if (cur_scope->idents == NULL)
-		return false;
+		return NULL;
 
 	ident_node* identifier = cur_scope->idents;
 
 	while (identifier != NULL) {
-		if (strcmp(identifier->ident, ident->name) == 0)
-			return true;
+		if (strcmp(identifier->name, ident->name) == 0)
+			return identifier;
 		
 		identifier = identifier->next;
 	}
 
-	return false;
+	return NULL;
 }
 
 //Free ident list inside a scope_node
 void scope_check_free_ident_list(scope_node* node) {
-
+	// printf("freeing ident_list\n");
 	//Check ident list of tail to free
 	if (node->idents != NULL) {
 		ident_node* ident = node->idents;
@@ -494,12 +517,14 @@ void scope_check_free_ident_list(scope_node* node) {
 		while (ident != NULL) {
 
 			next_node = ident->next;
-			free(ident->ident);
-			ident = ident->next;
+			free(ident->name);
+			free(ident->var_type);
 			free(ident);
 			ident = next_node;
 
 		}
 
 	}
+
+	// printf("freed ident_list\n");
 }

@@ -11,7 +11,8 @@
 //LinkedList Data Structures
 
 typedef struct ident_node {
-	char* ident;
+	char* name;
+	char* var_type;
 	struct ident_node* next;
 } ident_node;
 
@@ -71,8 +72,8 @@ void scope_check_enter_scope(linked_list* list);
 
 void scope_check_leave_scope(linked_list* list);
 
-void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident);
+void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident, char* type);
 
-bool scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident);
+ident_node* scope_check_in_scope_decl(scope_node* cur_scope, ident_t* ident);
 
 void scope_check_free_ident_list(scope_node* node);
