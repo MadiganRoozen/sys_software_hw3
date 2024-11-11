@@ -26,6 +26,7 @@ void scope_check_program(block_t program_AST) {
 
 //Starts all Declaration Checking of AST
 void scope_check_block(linked_list* scope_list, block_t* prog) {
+	// printf("checking block\n");
 
 	//Entering new Scope
 	scope_check_enter_scope(scope_list);
@@ -71,7 +72,7 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 		//For Each Constant Declaration List
 		while (const_def != NULL) {
 			ident_t ident = const_def->ident;
-
+			// printf("checking const dec\n");
 			scope_check_declare_ident(cur_scope, &ident);
 			
 		}
@@ -94,11 +95,13 @@ void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 		if (ident_list.start == NULL) {
 			var_decl = var_decl->next;
 			continue;
+			// return;
 		}
 
 		ident_t* ident = ident_list.start;
 
 		while (ident != NULL) {
+			// printf("checking ident: %s\n", ident->name);
 			scope_check_declare_ident(cur_scope, ident);
 			ident = ident->next;
 		}
@@ -187,7 +190,7 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 }
 
 void scope_check_assign_stmt(scope_node* cur_scope, assign_stmt_t stmt) {
-
+	// printf("checking assignment\n");
 	//Checking Identifier
 		//Creating Ident_t for Identifier Name
 		ident_t* ident = malloc(sizeof(ident_t));
@@ -434,7 +437,7 @@ void scope_check_leave_scope(linked_list* list) {
 
 //Add an Ident Node to the end of the Ident List
 void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident) {
-	// printf("checking ident\n");
+	// printf("checking ident dec\n");
 	//Check if Ident Is Present In Scope Declaration Already
 		//In Declarations Already - Bail With Error
 		if (scope_check_in_scope_decl(cur_scope, ident)) {
