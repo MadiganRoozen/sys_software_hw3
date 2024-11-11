@@ -34,10 +34,11 @@ int main(int argc, char *argv[])
 
     // check if declared already / not declared errors
     //change for part 2
-    scope_check_program(progast);
-
+    
     // unparse to check on the AST
     unparseProgram(stdout, progast);
+
+    scope_check_program(progast);
 
     return EXIT_SUCCESS;
 }

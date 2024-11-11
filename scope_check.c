@@ -157,11 +157,11 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 				break;
 
 			case if_stmt:
-				scope_check_if_stmt(scope_list->tail, stmt->data.if_stmt);
+				scope_check_if_stmt(scope_list, stmt->data.if_stmt);
 				break;
 
 			case while_stmt:
-				scope_check_while_stmt(scope_list->tail, stmt->data.while_stmt);
+				scope_check_while_stmt(scope_list, stmt->data.while_stmt);
 				break;
 
 			case read_stmt:
@@ -197,10 +197,10 @@ void scope_check_assign_stmt(scope_node* cur_scope, assign_stmt_t stmt) {
 		ident->next = NULL;
 
 		//Checking Ident
-		scope_check_declare_ident(cur_scope, ident);
+		scope_check_in_scope_vis(cur_scope, *ident);
 
 		//Free - No Longer Needed
-		// free(ident);
+		free(ident);
 
 	//Checking Expression
 	scope_check_expr(cur_scope, stmt.expr);
@@ -211,27 +211,105 @@ void scope_check_assign_stmt(scope_node* cur_scope, assign_stmt_t stmt) {
 void scope_check_call_stmt(scope_node* cur_scope, call_stmt_t stmt) {
 
 	//Creating Call Ident
-	ident_t call_ident = malloc
+	ident_t* ident = malloc(sizeof(ident_t));
+	ident->name = stmt.name;
+	ident->file_loc = stmt.file_loc;
+	ident->type_tag = stmt.type_tag;
+	ident->next = NULL;
+
 
 	//Check If Call Ident is Declared Already
-	scope_check_in_scope_vis(cur_scope, )
+	scope_check_in_scope_vis(cur_scope, *ident);
+
+	//Free Ident
+	free(ident);
 }
 
-void scope_check_if_stmt(scope_node* cur_scope, if_stmt_t stmt) {
+void scope_check_if_stmt(linked_list* scope_list, if_stmt_t stmt) {
 	
+	//Check Condition
+	scope_check_condition(scope_list->tail, stmt.condition);
+
+	//Check Then Statements if Not Null
+	if (stmt.then_stmts != NULL)
+		scope_check_statements(scope_list, *(stmt.then_stmts));
+
+	//Check Else if Else is Not Null
+	if (stmt.else_stmts != NULL)
+		scope_check_statements(scope_list, *(stmt.else_stmts));
+
 }
 
-void scope_check_while_stmt(scope_node* cur_scope, while_stmt_t stmt) {
+void scope_check_while_stmt(linked_list* scope_list, while_stmt_t stmt) {
 	
-}
+	//Check Condition
+	scope_check_condition(scope_list->tail, stmt.condition);
+
+	//Check Body Statements
+	if (stmt.body != NULL)
+		scope_check_statements(scope_list, *(stmt.body));
+
+}	
 
 void scope_check_read_stmt(scope_node* cur_scope, read_stmt_t stmt) {
 	
+	//Create Identifier
+	ident_t* ident = malloc(sizeof(ident_t));
+	ident->name = stmt.name;
+	ident->file_loc = stmt.file_loc;
+	ident->type_tag = stmt.type_tag;
+	ident->next = NULL;
+
+	//Check if Read ident is Declared and Ready
+	scope_check_in_scope_vis(cur_scope, *ident);
+
+	//Free Ident
+	free(ident);
+
 }
 
 void scope_check_print_stmt(scope_node* cur_scope, print_stmt_t stmt) {
 	
+	//Check Expression
+	scope_check_expr(cur_scope, &(stmt.expr));
 }
+
+void scope_check_condition(scope_node* cur_scope, condition_t stmt) {
+
+	//Switch on Kind of Condition
+	switch (stmt.cond_kind) {
+
+		case ck_db:
+			scope_check_db_condition(cur_scope, stmt.data.db_cond);
+			break;
+
+		case ck_rel:
+			scope_check_rel_condition(cur_scope, stmt.data.rel_op_cond);
+			break;
+
+		default:
+			//Unsure of Implimentation - Improper Condition
+			break;
+	}
+}
+
+void scope_check_db_condition(scope_node* cur_scope, db_condition_t db_cond) {
+
+	//Check Conditions Divisor
+	scope_check_expr(cur_scope, &(db_cond.divisor));
+
+	//Check Conditions Dividend
+	scope_check_expr(cur_scope, &(db_cond.dividend));
+}
+
+void scope_check_rel_condition(scope_node* cur_scope, rel_op_condition_t rel_cond) {
+	
+	//Check Expression 1
+	scope_check_expr(cur_scope, &(rel_cond.expr1));
+
+	//Check Expression 2
+	scope_check_expr(cur_scope, &(rel_cond.expr2));
+}	
 
 void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
 
@@ -250,7 +328,7 @@ void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
 			break;
 
 		case expr_ident:
-			scope_check_in_scope_vis(cur_scope, expr->ident);
+			scope_check_in_scope_vis(cur_scope, expr->data.ident);
 			break;
 
 		case expr_number:
@@ -259,7 +337,7 @@ void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
 
 		default:
 			//Unsure of Implementation - Improper Expression Given
-			bail_with_error("Unexpected expr_kind_e (%d) in scope_check_expr", exp.expr_kind);
+			bail_with_error("Unexpected expr_kind_e (%d) in scope_check_expr", expr->expr_kind);
 			break;
 	}
 }
@@ -289,7 +367,7 @@ void scope_check_in_scope_vis(scope_node* cur_scope, ident_t ident) {
 
 		while (identifiers != NULL) {
 
-			if (strcmp(identifiers->ident, ident->name) == 0)
+			if (strcmp(identifiers->ident, ident.name) == 0)
 				return;
 
 			identifiers = identifiers->next;
@@ -298,7 +376,7 @@ void scope_check_in_scope_vis(scope_node* cur_scope, ident_t ident) {
 		cur_scope = cur_scope->prev;
 	}
 
-	bail_with_prog_error(ident.file_loc, "identifier \"%s\" is not declared!", ident.name);
+	bail_with_prog_error(*(ident.file_loc), "identifier \"%s\" is not declared!", ident.name);
 
 }
 
