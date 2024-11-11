@@ -432,6 +432,8 @@ void scope_check_enter_scope(linked_list* list) {
 //Removes the Scope Node at the End of the list
 void scope_check_leave_scope(linked_list* list) {
 
+	scope--;
+
 	//Check if List is Already Empty
 	if (list->head == NULL)
 		return;
@@ -524,7 +526,13 @@ void scope_check_free_ident_list(scope_node* node) {
 
 		}
 
+		free(ident);
+		free(next_node);
+
 	}
+
+	free(node->idents_tail);
+
 
 	// printf("freed ident_list\n");
 }
