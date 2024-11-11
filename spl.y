@@ -169,7 +169,7 @@ relOp: "==" | "!=" | "<" | "<=" | ">" | ">=";
 expr: term | expr "+" term {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));}| expr "-" term {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));};
 term: factor | term "*" factor {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));} | term "/" factor {$$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3));};
 factor: identsym { $$ = ast_expr_ident($1); }| numbersym {$$ = ast_expr_number($1); }
-        | sign factor { $$ = ast_expr_signed_expr($1, $2);} | "(" expr ")"
+        | sign factor { $$ = ast_expr_signed_expr($1, $2);} | "(" expr ")" {$$ = $2;};
 sign: "-" | "+";
 
 
