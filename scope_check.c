@@ -149,27 +149,27 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 		switch (stmt->stmt_kind) {
 
 			case assign_stmt:
-				scope_check_assign_stmt(scope_list->tail, stmt);
+				scope_check_assign_stmt(scope_list->tail, stmt->data.assign_stmt);
 				break;
 
 			case call_stmt:
-
+				scope_check_call_stmt(scope_list->tail, stmt->data.call_stmt);
 				break;
 
 			case if_stmt:
-
+				scope_check_if_stmt(scope_list->tail, stmt->data.if_stmt);
 				break;
 
 			case while_stmt:
-
+				scope_check_while_stmt(scope_list->tail, stmt->data.while_stmt);
 				break;
 
 			case read_stmt:
-
+				scope_check_read_stmt(scope_list->tail, stmt->data.read_stmt);
 				break;
 
 			case print_stmt:
-
+				scope_check_print_stmt(scope_list->tail, stmt->data.print_stmt);
 				break;
 
 			case block_stmt:
@@ -177,7 +177,7 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 				break;
 
 			default:
-
+				//Unsure of Implementation - Improper Statement Given
 				break;
 		}
 
@@ -186,14 +186,14 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 	}
 }
 
-void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt) {
+void scope_check_assign_stmt(scope_node* cur_scope, assign_stmt_t stmt) {
 
 	//Checking Identifier
 		//Creating Ident_t for Identifier Name
 		ident_t* ident = malloc(sizeof(ident_t));
-		ident->name = stmt->data.assign_stmt.name;
-		ident->file_loc = stmt->data.assign_stmt.file_loc;
-		ident->type_tag = stmt->data.assign_stmt.type_tag;
+		ident->name = stmt.name;
+		ident->file_loc = stmt.file_loc;
+		ident->type_tag = stmt.type_tag;
 		ident->next = NULL;
 
 		//Checking Ident
@@ -203,9 +203,34 @@ void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt) {
 		// free(ident);
 
 	//Checking Expression
-	scope_check_expr(cur_scope, stmt->data.assign_stmt.expr);
+	scope_check_expr(cur_scope, stmt.expr);
 
 
+}
+
+void scope_check_call_stmt(scope_node* cur_scope, call_stmt_t stmt) {
+
+	//Creating Call Ident
+	ident_t call_ident = malloc
+
+	//Check If Call Ident is Declared Already
+	scope_check_in_scope_vis(cur_scope, )
+}
+
+void scope_check_if_stmt(scope_node* cur_scope, if_stmt_t stmt) {
+	
+}
+
+void scope_check_while_stmt(scope_node* cur_scope, while_stmt_t stmt) {
+	
+}
+
+void scope_check_read_stmt(scope_node* cur_scope, read_stmt_t stmt) {
+	
+}
+
+void scope_check_print_stmt(scope_node* cur_scope, print_stmt_t stmt) {
+	
 }
 
 void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
@@ -217,36 +242,63 @@ void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
 	switch (expr->expr_kind) {
 
 		case expr_bin:
-			scope_check_bin_expr(cur_scope, expr);
+			scope_check_bin_expr(cur_scope, expr->data.binary);
 			break;
 
 		case expr_negated:
-			scope_check_neg_expr(cur_scope, expr);
+			scope_check_neg_expr(cur_scope, expr->data.negated);
 			break;
 
 		case expr_ident:
-			scope_check_in_scope_vis(cur_scope, expr);
+			scope_check_in_scope_vis(cur_scope, expr->ident);
 			break;
 
 		case expr_number:
-			
+			//Nothing to Check
 			break;
 
 		default:
-
+			//Unsure of Implementation - Improper Expression Given
+			bail_with_error("Unexpected expr_kind_e (%d) in scope_check_expr", exp.expr_kind);
 			break;
 	}
 }
 
-void scope_check_bin_expr(scope_node* cur_scope, expr_t* expr) {
+void scope_check_bin_expr(scope_node* cur_scope, binary_op_expr_t bin_expr) {
+
+	//Check Expression 1
+	scope_check_expr(cur_scope, bin_expr.expr1);
+
+	//Check Expression 2
+	scope_check_expr(cur_scope, bin_expr.expr2);
 
 }
 
-void scope_check_neg_expr(scope_node* cur_scope, expr_t* expr) {
+void scope_check_neg_expr(scope_node* cur_scope, negated_expr_t neg_expr) {
+
+	//Check Expression
+	scope_check_expr(cur_scope, neg_expr.expr);
 
 }
 
-void scope_check_in_scope_vis(scope_node* cur_scope, expr_t* expr) {
+void scope_check_in_scope_vis(scope_node* cur_scope, ident_t ident) {
+
+	//Check Current Scope And Work Upwards Towards Head
+	while (cur_scope != NULL) {
+		ident_node* identifiers = cur_scope->idents;
+
+		while (identifiers != NULL) {
+
+			if (strcmp(identifiers->ident, ident->name) == 0)
+				return;
+
+			identifiers = identifiers->next;
+		}
+
+		cur_scope = cur_scope->prev;
+	}
+
+	bail_with_prog_error(ident.file_loc, "identifier \"%s\" is not declared!", ident.name);
 
 }
 

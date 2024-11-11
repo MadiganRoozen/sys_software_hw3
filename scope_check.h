@@ -43,6 +43,16 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts);
 
 void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt);
 
+void scope_check_call_stmt(scope_node* cur_scope, call_stmt_t stmt);
+
+void scope_check_if_stmt(scope_node* cur_scope, if_stmt_t stmt);
+
+void scope_check_while_stmt(scope_node* cur_scope, while_stmt_t stmt);
+
+void scope_check_read_stmt(scope_node* cur_scope, read_stmt_t stmt);
+
+void scope_check_print_stmt(scope_node* cur_scope, print_stmt_t stmt);
+
 void scope_check_expr(scope_node* cur_scope, expr_t* expr);
 
 void scope_check_bin_expr(scope_node* cur_scope, expr_t* expr);
