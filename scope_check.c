@@ -20,8 +20,6 @@ void scope_check_program(block_t program_AST) {
 	scope_list->tail = NULL;
 
 	scope_check_block(scope_list, &program_AST);
-
-
 }
 
 //Starts all Declaration Checking of AST
@@ -73,12 +71,14 @@ void scope_check_const_decls(scope_node* cur_scope, const_decls_t consts_decls) 
 			ident_t ident = const_def->ident;
 
 			scope_check_declare_ident(cur_scope, &ident);
+			const_def = const_def->next;
 			
 		}
 
 	}
 }
 
+//Check variable declarations
 void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 
 	//Base Case - No Declarations Present
@@ -106,6 +106,7 @@ void scope_check_var_decls(scope_node* cur_scope, var_decls_t vars_decls) {
 
 }
 
+//Check procedure declarations
 void scope_check_proc_decls(linked_list* scope_list, proc_decls_t procs_decls) {
 
 	//Base Case - No Declarations Present
@@ -153,23 +154,61 @@ void scope_check_statements(linked_list* scope_list, stmts_t stmts) {
 				break;
 
 			case call_stmt:
+				if(stmt->data.call_stmt.name != NULL){
+					ident_t ident;
+					ident.name = stmt->data.call_stmt.name;
+					ident.file_loc = stmt->data.call_stmt.file_loc;
 
+					//Check if the procedure name was declared
+					if(!scope_check_in_scope_decl(scope_list->tail, &ident)) {
+						bail_with_prog_error(*(ident.file_loc), "Procedure \"%s\" is not declared in this scope!", ident.name);
+					}
+				}
 				break;
 
 			case if_stmt:
+
+				scope_check_expr(scope_list->tail, stmt->data.if_stmt.condition);
+
+				scope_check_enter_scope(scope_list);
+				scope_check_statements(scope_list, stmt->data.if_stmt.then_stmts);
+				scope_check_leave_scope(scope_list);
+
+				if (stmt->data.if_stmt.else_stmts != NULL) {
+					scope_check_enter_scope(scope_list);
+					scope_check_statements(scope_list, stmt->data.if_stmt.else_stmts);
+					scope_check_leave_scope(scope_list);
+				}
 
 				break;
 
 			case while_stmt:
 
+				scope_check_expr(scope_list->tail, stmt->data.while_stmt.condition);
+
+				scope_check_enter_scope(scope_list);
+				scope_check_statements(scope_list, stmt->data.while_stmt.body);
+				scope_check_leave_scope(scope_list);
 				break;
 
 			case read_stmt:
 
+				if(stmt->data.read_stmt.name != NULL){
+					ident_t ident;
+					ident.name = stmt->data.read_stmt.name;
+					ident.file_loc = stmt->data.read_stmt.file_loc;
+
+					if(!scope_check_in_scope_decl(scope_list->tail, &ident)){
+						bail_with_prog_error(*(ident.file_loc), "Variable \"%s\" is not declared in this scope!", ident.name);
+					}
+				}
+
+				
 				break;
 
 			case print_stmt:
 
+				scope_check_expr(scope_list, stmt->data.block_stmt.block);
 				break;
 
 			case block_stmt:
@@ -204,8 +243,6 @@ void scope_check_assign_stmt(scope_node* cur_scope, stmt_t* stmt) {
 
 	//Checking Expression
 	scope_check_expr(cur_scope, stmt->data.assign_stmt.expr);
-
-
 }
 
 void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
@@ -240,16 +277,48 @@ void scope_check_expr(scope_node* cur_scope, expr_t* expr) {
 
 void scope_check_bin_expr(scope_node* cur_scope, expr_t* expr) {
 
+	//If it doesnt exist or its not a binary operation
+	if(expr == NULL || expr->expr_kind != expr_bin){
+		return;
+	}
+
+	//check the left expression
+	if(expr->data.binary.expr1 != NULL) {
+		scope_check_expr(cur_scope, expr->data.binary.expr1);
+	}
+
+	//check the right expression
+	if(expr->data.binary.expr2 != NULL) {
+		scope_check_expr(cur_scope, expr->data.binary.expr2);
+	}
 }
 
 void scope_check_neg_expr(scope_node* cur_scope, expr_t* expr) {
+	//If it doesnt exist or its not a negate operation
+	if(expr == NULL || expr->expr_kind != expr_negated){
+		return;
+	}
 
+	if(expr->data.negated.expr != NULL){
+		scope_check_expr(cur_scope, expr->data.negated.expr);
+	}
 }
 
 void scope_check_in_scope_vis(scope_node* cur_scope, expr_t* expr) {
 
-}
+	//Ensure the expression is an identifier expresion
+	if(expr == NULL || expr->expr_kind != expr_ident){
+		return;
+	}
 
+	//Get the ident from the expr
+	ident_t *ident = &(expr->data.ident);
+
+	//check if the identifier is within the scope
+	if(!scope_check_in_scope_decl(cur_scope, ident)){
+		bail_with_prog_error(*(ident->file_loc), "Variable \"%s\" is not declared in this scope!", ident->name); 
+	}
+}
 
 
 //Adds a new Scope Node to the End of the List
@@ -313,7 +382,7 @@ void scope_check_declare_ident(scope_node* cur_scope, ident_t* ident) {
 		//Not In Declarations Yet - Declare
 		else {
 			//New Node
-			ident_node* new_node = malloc(sizeof(ident_node));
+			ident_node* new_node = malloc(sizeof(ident_node)+1);
 			new_node->next = NULL;
 			new_node->ident = malloc(strlen(ident->name));
 			strcpy(new_node->ident, ident->name);
@@ -363,8 +432,6 @@ void scope_check_free_ident_list(scope_node* node) {
 			ident = ident->next;
 			free(ident);
 			ident = next_node;
-
 		}
-
 	}
 }

@@ -1,5 +1,1 @@
-begin
-  var x;
-  x := 0
-end
-.
+hw3-asttest0.spl: line 3 Variable "x" has already been declared!
